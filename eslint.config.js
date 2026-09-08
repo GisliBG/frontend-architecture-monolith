@@ -3,6 +3,7 @@ import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import boundaries from "eslint-plugin-boundaries";
 
 export default tseslint.config(
   { ignores: ["dist", "node_modules", "*.d.ts"] },
@@ -16,6 +17,7 @@ export default tseslint.config(
     plugins: {
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
+      boundaries,
     },
     settings: {
       "import/resolver": {
@@ -23,10 +25,58 @@ export default tseslint.config(
           project: "./tsconfig.json",
         },
       },
+      "boundaries/elements": [
+        {
+          type: "authentication",
+          pattern: "src/modules/authentication/**/*",
+          mode: "full",
+        },
+        {
+          type: "modules",
+          pattern: "src/modules/*/**/*",
+          mode: "full",
+          capture: ["moduleName"],
+        },
+        { type: "shared", pattern: "src/shared/**/*", mode: "full" },
+      ],
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
+      "boundaries/dependencies": [
+        "error",
+        {
+          default: "disallow",
+          rules: [
+            { allow: { dependency: { kind: "type" } } },
+            {
+              from: { type: "authentication" },
+              allow: {
+                to: { type: ["authentication", "shared"] },
+              },
+            },
+            {
+              from: { type: "shared" },
+              allow: { to: { type: ["shared"] } },
+            },
+            {
+              from: { type: "modules" },
+              allow: [
+                { to: { type: ["shared", "authentication"] } },
+                {
+                  to: {
+                    type: ["modules"],
+                    captured: { moduleName: "{{from.captured.moduleName}}" },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
     },
   },
 );
