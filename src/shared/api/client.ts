@@ -1,4 +1,4 @@
-import { getStoredAuthToken } from "@/modules/authentication/lib/auth-storage";
+import { getStoredAuthToken } from "@/shared/lib/auth-storage";
 
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
